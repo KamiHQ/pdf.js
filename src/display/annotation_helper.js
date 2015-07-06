@@ -26,7 +26,11 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
   function setTextStyles(element, item, fontObj) {
 
     var style = element.style;
-    style.fontSize = item.fontSize + 'px';
+
+    if ('fontSize' in item) {
+      style.fontSize = item.fontSize + 'px';
+    }
+
     style.direction = item.fontDirection < 0 ? 'rtl': 'ltr';
 
     if (!fontObj) {
@@ -112,6 +116,90 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     cstyle.width = width + 'px';
     cstyle.height = height + 'px';
     return container;
+  }
+
+  function isBitSet(value, pos) {
+    // Note: pos is 1 based index
+    return !!(value & (1 << (pos - 1)));
+  }
+
+  function createWidgetAnnotationContainer(item) {
+    var element = document.createElement('div');
+    var width = item.rect[2] - item.rect[0];
+    var height = item.rect[3] - item.rect[1];
+    element.style.width = width + 'px';
+    element.style.height = height + 'px';
+    element.className = 'widgetContainer';
+
+    return element;
+  }
+
+  function createTextWidgetAnnotation(item, commonObjs) {
+    var isMultiline = isBitSet(item.fieldFlags, 13);
+    // var isPassword = isBitSet(item.fieldFlags, 14);
+    // var isFileSelect = isBitSet(item.fieldFlags, 21);
+    // var isDoNotSpellCheck = isBitSet(item.fieldFlags, 23);
+    // var isDoNotScroll = isBitSet(item.fieldFlags, 24);
+    // var isComb = isBitSet(item.fieldFlags, 25);
+    // var isRichText = isBitSet(item.fieldFlags, 26);
+
+    var content;
+
+    if (isMultiline) {
+      content = document.createElement('textarea');
+    } else {
+      content = document.createElement('input');
+      content.type = 'text';
+    }
+    
+    content.value = item.fieldValue;
+    var textAlignment = item.textAlignment;
+    content.style.textAlign = ['left', 'center', 'right'][textAlignment];
+    content.style.verticalAlign = 'middle';
+    content.className = 'widgetControl';
+    if (item.maxLen !== null) {
+      content.maxLength = item.maxLen;
+    }
+
+    var fontObj = item.fontRefName ?
+      commonObjs.getData(item.fontRefName) : null;
+    setTextStyles(content, item, fontObj);
+
+    if (!isMultiline && !('fontSize' in item)) {
+      // hack to guess font size base on content hight
+      // so it display fine on small text field
+      // this need to be removed when we can apply defaultAppearance
+      var height = item.rect[3] - item.rect[1];
+      if (height < 15) {
+          content.style.fontSize = (height - 1) + 'px';
+      }
+    }
+
+    return content;
+  }
+
+  function getHtmlElementForInteractiveWidgetAnnotation(item, commonObjs) {
+    var element, container;
+    switch(item.fieldType) {
+      case 'Tx':
+        element = createTextWidgetAnnotation(item, commonObjs);
+        break;
+    }
+
+    if (element) {
+      container = createWidgetAnnotationContainer(item);
+      var isReadonly = isBitSet(item.fieldFlags, 1);
+      element.disabled = isReadonly;
+
+      element.style.width = container.style.width;
+      element.style.height = container.style.height;
+
+      container.appendChild(element);
+
+      return container;
+    }
+
+    return null;
   }
 
   function getHtmlElementForTextWidgetAnnotation(item, commonObjs) {
@@ -273,6 +361,9 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
   }
 
   function getHtmlElement(data, objs) {
+    if (!data.hasHtml) {
+      return null;
+    }
     switch (data.annotationType) {
       case AnnotationType.WIDGET:
         return getHtmlElementForTextWidgetAnnotation(data, objs);
@@ -285,8 +376,18 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     }
   }
 
+  function getInteractiveHtmlElement(data, objs) {
+    switch (data.annotationType) {
+      case AnnotationType.WIDGET:
+        return getHtmlElementForInteractiveWidgetAnnotation(data, objs);
+      default:
+        return getHtmlElement(data, objs);
+    }
+  }
+
   return {
-    getHtmlElement: getHtmlElement
+    getHtmlElement: getHtmlElement,
+    getInteractiveHtmlElement: getInteractiveHtmlElement
   };
 })();
 PDFJS.AnnotationUtils = AnnotationUtils;

@@ -485,6 +485,7 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
     var dict = params.dict;
     var data = this.data;
 
+    data.annotationType = AnnotationType.WIDGET;
     data.fieldValue = stringToPDFString(
       Util.getInheritableProperty(dict, 'V') || '');
     data.alternativeText = stringToPDFString(dict.get('TU') || '');
@@ -547,8 +548,8 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
     WidgetAnnotation.call(this, params);
 
     this.data.textAlignment = Util.getInheritableProperty(params.dict, 'Q');
-    this.data.annotationType = AnnotationType.WIDGET;
     this.data.hasHtml = !this.data.hasAppearance && !!this.data.fieldValue;
+    this.data.maxLen = Util.getInheritableProperty(params.dict, 'MaxLen');
   }
 
   Util.inherit(TextWidgetAnnotation, WidgetAnnotation, {
@@ -634,7 +635,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
         if (!isValidUrl(url, false)) {
           url = '';
         }
-        // According to ISO 32000-1:2008, section 12.6.4.7, 
+        // According to ISO 32000-1:2008, section 12.6.4.7,
         // URI should to be encoded in 7-bit ASCII.
         // Some bad PDFs may have URIs in UTF-8 encoding, see Bugzilla 1122280.
         try {

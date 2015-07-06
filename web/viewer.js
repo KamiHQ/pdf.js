@@ -266,6 +266,9 @@ var PDFViewerApplication = {
         }
         PDFJS.disableTextLayer = value;
       }),
+      Preferences.get('enableInteractiveForms').then(function resolved(value) {
+        PDFJS.enableInteractiveForms = value;
+      }),
       Preferences.get('disableRange').then(function resolved(value) {
         if (PDFJS.disableRange === true) {
           return;
@@ -1337,6 +1340,12 @@ function webViewerInitialized() {
           break;
       }
     }
+
+    if ('enableinteractiveforms' in hashParams) {
+      PDFJS.enableInteractiveForms =
+        hashParams['enableinteractiveforms'] === 'true';
+    }
+
     if ('pdfbug' in hashParams) {
       PDFJS.pdfBug = true;
       var pdfBug = hashParams['pdfbug'];

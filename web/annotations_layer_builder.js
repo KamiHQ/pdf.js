@@ -96,12 +96,22 @@ var AnnotationsLayerBuilder = (function AnnotationsLayerBuilderClosure() {
         } else {
           for (i = 0, ii = annotationsData.length; i < ii; i++) {
             data = annotationsData[i];
-            if (!data || !data.hasHtml) {
+            if (!data) {
               continue;
             }
 
-            element = PDFJS.AnnotationUtils.getHtmlElement(data,
-              pdfPage.commonObjs);
+            if (PDFJS.enableInteractiveForms) {
+              element = PDFJS.AnnotationUtils.getInteractiveHtmlElement(data,
+                                                          pdfPage.commonObjs);
+            } else {
+              element = PDFJS.AnnotationUtils.getHtmlElement(data,
+                                                          pdfPage.commonObjs);
+            }
+
+            if (!element) {
+              continue;
+            }
+
             element.setAttribute('data-annotation-id', data.id);
             if (typeof mozL10n !== 'undefined') {
               mozL10n.translate(element);
