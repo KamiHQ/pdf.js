@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 /* globals PDFJS, Util, AnnotationType, AnnotationBorderStyleType, warn,
-           CustomStyle */
+           CustomStyle, isArray */
 
 'use strict';
 
@@ -178,11 +178,53 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     return content;
   }
 
+  function createChoiceWidgetAnnotation(item, commonObjs) {
+    var isCombo = isBitSet(item.fieldFlags, 18);
+    // var isEdit = isBitSet(item.fieldFlags, 19);
+    var isMultiSelect = isBitSet(item.fieldFlags, 22);
+    // var isDoNotSpellCheck = isBitSet(item.fieldFlags, 23);
+    // var isCommitOnSelChange = isBitSet(item.fieldFlags, 27);
+
+    var content = document.createElement('select');
+    content.className = 'widgetControl';
+
+    if (!isCombo) { // list box
+      // size should be calcualted from content.style.height / rowHeight
+      // but because we already set content.style.height so 2 is enough
+      content.size = 2;
+    }
+
+    content.multiple = isMultiSelect;
+
+    var i, ii;
+    for (i = 0, ii = item.options.length; i < ii; i++) {
+      var optionElement = document.createElement('option');
+      var option = item.options[i];
+      if (isArray(option)) {
+        optionElement.value = option[0];
+        optionElement.text = option[1];
+      } else {
+        optionElement.text = option;
+      }
+
+      if (optionElement.text === item.fieldValue) {
+        optionElement.selected = true;
+      }
+      
+      content.appendChild(optionElement);
+    }
+
+    return content;
+  }
+
   function getHtmlElementForInteractiveWidgetAnnotation(item, commonObjs) {
     var element, container;
     switch(item.fieldType) {
       case 'Tx':
         element = createTextWidgetAnnotation(item, commonObjs);
+        break;
+      case 'Ch':
+        element = createChoiceWidgetAnnotation(item, commonObjs);
         break;
     }
 

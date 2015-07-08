@@ -259,10 +259,13 @@ var Annotation = (function AnnotationClosure() {
         return;
       }
 
-      if (fieldType === 'Tx') {
-        return TextWidgetAnnotation;
-      } else {
-        return WidgetAnnotation;
+      switch (fieldType) {
+        case 'Tx':
+          return TextWidgetAnnotation;
+        case 'Ch':
+          return ChoiceWidgetAnnotation;
+        default:
+          return WidgetAnnotation;
       }
     } else {
       return Annotation;
@@ -576,6 +579,24 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
   });
 
   return TextWidgetAnnotation;
+})();
+
+var ChoiceWidgetAnnotation = (function ChoiceWidgetAnnotationClosure() {
+  function ChoiceWidgetAnnotation(params) {
+    var i, ii;
+
+    WidgetAnnotation.call(this, params);
+
+    this.data.textAlignment = Util.getInheritableProperty(params.dict, 'Q');
+    this.data.hasHtml = true;
+    this.data.options = params.dict.get('Opt') || [];
+    this.data.topIndex = params.dict.get('TI') || 0;
+    this.data.selectedIndices = params.dict.get('I') || [];
+  }
+
+  Util.inherit(ChoiceWidgetAnnotation, WidgetAnnotation, { });
+
+  return ChoiceWidgetAnnotation;
 })();
 
 var TextAnnotation = (function TextAnnotationClosure() {
