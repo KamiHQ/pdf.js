@@ -264,6 +264,8 @@ var Annotation = (function AnnotationClosure() {
           return TextWidgetAnnotation;
         case 'Ch':
           return ChoiceWidgetAnnotation;
+        case 'Btn':
+          return ButtonWidgetAnnotation;
         default:
           return WidgetAnnotation;
       }
@@ -489,8 +491,8 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
     var data = this.data;
 
     data.annotationType = AnnotationType.WIDGET;
-    data.fieldValue = stringToPDFString(
-      Util.getInheritableProperty(dict, 'V') || '');
+    var fieldValue = Util.getInheritableProperty(dict, 'V');
+    data.fieldValue = isName(fieldValue) ? fieldValue.name : stringToPDFString(fieldValue || '');
     data.alternativeText = stringToPDFString(dict.get('TU') || '');
     data.defaultAppearance = Util.getInheritableProperty(dict, 'DA') || '';
     var fieldType = Util.getInheritableProperty(dict, 'FT');
@@ -540,23 +542,9 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
       }
 
       return parent.isViewable.call(this);
-    }
-  });
+    },
 
-  return WidgetAnnotation;
-})();
-
-var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
-  function TextWidgetAnnotation(params) {
-    WidgetAnnotation.call(this, params);
-
-    this.data.textAlignment = Util.getInheritableProperty(params.dict, 'Q');
-    this.data.hasHtml = !this.data.hasAppearance && !!this.data.fieldValue;
-    this.data.maxLen = Util.getInheritableProperty(params.dict, 'MaxLen');
-  }
-
-  Util.inherit(TextWidgetAnnotation, WidgetAnnotation, {
-    getOperatorList: function TextWidgetAnnotation_getOperatorList(evaluator) {
+    getOperatorList: function WidgetAnnotation_getOperatorList(evaluator) {
       if (this.appearance) {
         return Annotation.prototype.getOperatorList.call(this, evaluator);
       }
@@ -578,6 +566,20 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
     }
   });
 
+  return WidgetAnnotation;
+})();
+
+var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
+  function TextWidgetAnnotation(params) {
+    WidgetAnnotation.call(this, params);
+
+    this.data.textAlignment = Util.getInheritableProperty(params.dict, 'Q');
+    this.data.hasHtml = !this.data.hasAppearance && !!this.data.fieldValue;
+    this.data.maxLen = Util.getInheritableProperty(params.dict, 'MaxLen');
+  }
+
+  Util.inherit(TextWidgetAnnotation, WidgetAnnotation, { });
+
   return TextWidgetAnnotation;
 })();
 
@@ -597,6 +599,24 @@ var ChoiceWidgetAnnotation = (function ChoiceWidgetAnnotationClosure() {
   Util.inherit(ChoiceWidgetAnnotation, WidgetAnnotation, { });
 
   return ChoiceWidgetAnnotation;
+})();
+
+var ButtonWidgetAnnotation = (function ButtonWidgetAnnotationClosure() {
+  function ButtonWidgetAnnotation(params) {
+    WidgetAnnotation.call(this, params);
+
+    this.data.textAlignment = Util.getInheritableProperty(params.dict, 'Q');
+    this.data.hasHtml = true;
+    this.data.options = params.dict.get('Opt') || [];
+  }
+
+  Util.inherit(ButtonWidgetAnnotation, WidgetAnnotation, {
+    getOperatorList: function ButtonWidgetAnnotation_getOperatorList(evaluator) {
+      return WidgetAnnotation.prototype.getOperatorList.call(this, evaluator);
+    }
+  });
+
+  return ButtonWidgetAnnotation;
 })();
 
 var TextAnnotation = (function TextAnnotationClosure() {

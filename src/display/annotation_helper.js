@@ -217,6 +217,46 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     return content;
   }
 
+  function createButtonWidgetAnnotation(item, commonObjs) {
+    // var isNoToggleToOff = isBitSet(item.fieldFlags, 15);
+    var isRadio = isBitSet(item.fieldFlags, 16);
+    var isPushbutton = isBitSet(item.fieldFlags, 17);
+    // var isRadiosInUnison = isBitSet(item.fieldFlags, 26);
+
+    var content;
+    if (isPushbutton) {
+      return; // not supported
+      // content = document.createElement('button');
+    } else {
+
+      var input = document.createElement('input');
+      if (isRadio) {
+        input.type = 'radio';
+      } else {
+        input.type = 'checkbox';
+      }
+
+      content = document.createElement('label');
+      content.appendChild(input);
+      var span = document.createElement('span');
+      content.appendChild(span);
+
+      input.checked = item.fieldValue.length && item.fieldValue.toUpperCase() !== 'OFF';
+
+      // hack to guess font size base on content hight
+      // so it display fine on small text field
+      // this need to be removed when we can apply defaultAppearance
+      var height = item.rect[3] - item.rect[1];
+      content.style.fontSize = (height - 1) + 'px';
+
+    }
+
+    
+    content.className = 'widgetControl';
+
+    return content;
+  }
+
   function getHtmlElementForInteractiveWidgetAnnotation(item, commonObjs) {
     var element, container;
     switch(item.fieldType) {
@@ -226,6 +266,9 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
       case 'Ch':
         element = createChoiceWidgetAnnotation(item, commonObjs);
         break;
+      case 'Btn':
+        element = createButtonWidgetAnnotation(item, commonObjs);
+          break;
     }
 
     if (element) {

@@ -31,3 +31,34 @@
   background: rgba(192, 192, 192, 0.2);
   border: 0px none;
 }
+
+.annotationLayer label.widgetControl input {
+  display: none;
+}
+
+.annotationLayer label.widgetControl span {
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: block;
+  position: relative;
+  text-align: center;
+}
+
+.annotationLayer label.widgetControl input[type=checkbox] + span {
+  box-shadow: inset 0 0 0 1px gray;
+}
+
+.annotationLayer label.widgetControl input[type=radio] + span {
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px gray;
+}
+
+.annotationLayer .widgetControl input[type=checkbox]:checked + span:before {
+  content: '\2714'; /* check mark */
+}
+
+.annotationLayer .widgetControl input[type=radio]:checked + span {
+  box-shadow: inset 0 0 0 1px gray, inset 0 0 0 3px white;
+  background: black;
+}
