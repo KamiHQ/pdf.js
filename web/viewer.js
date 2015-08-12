@@ -608,10 +608,33 @@ var PDFViewerApplication = {
     this._printAction = printAction;
 
     canUsePDFium(function yes() {
-      PDFViewerApplication.pdfDocument.getDataForPrinting().then(function(res) {
-        printAction.pdfBlobUrl = res.pdfBlobUrl;
+      PDFViewerApplication.pdfDocument.getData().then(function(data) {
+        var blob = PDFJS.createBlob(data, 'application/pdf');
+        var blobUrl = URL.createObjectURL(blob);
+        printAction.pdfBlobUrl = blobUrl;
         printAction.embed = createPDFiumEmbed();
         printAction.embed.src = printAction.pdfBlobUrl;
+        printAction.embed.addEventListener('message', function(evt) {
+          var data = evt.data;
+          switch (data.type) {
+            case 'loadProgress':
+              // TODO: show load progress in a progress bar
+              if (data.progress === 100) { // load successful
+                printAction.embed.postMessage({
+                  type: 'print'
+                });
+              } else if (data.progress === -1) { // load failed
+                onFallback()
+              }
+              break;
+            case 'getPassword':
+              printAction.embed.postMessage({
+                type: 'getPasswordComplete',
+                password: 'password' // TODO: ask user for password or get it from worker
+              });
+              break;
+          }
+        });
         document.body.appendChild(printAction.embed);
         // Clean up when the print dialog is closed.
         window.addEventListener('focus', printAction);
